@@ -1,33 +1,33 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import './globals.css'
+import { Providers } from './components/Providers'
+import { Navbar } from './components/Navbar'
+import { Notifications } from './components/Notifications'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: "Invoice Generator",
-  description: "Generate professional invoices with ease",
-};
+  title: 'InvoiceMaster - Professional Invoice Generator',
+  description: 'Create, send, and track invoices with ease',
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body className={inter.className}>
+        <Providers>
+          <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <main>{children}</main>
+          </div>
+          <Notifications />
+        </Providers>
+      </body>
     </html>
-  );
+  )
 }

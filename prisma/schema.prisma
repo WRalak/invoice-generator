@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  password      String?
+  resetToken    String?
+  resetTokenExpiry DateTime?
+  stripeCustomerId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  invoices      Invoice[]
+  subscription  Subscription?
+  quota         Quota?
+  profiles      UserProfile[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invoice {
+  id            String         @id @default(cuid())
+  number        String         @unique
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  clientName    String
+  clientEmail   String
+  clientAddress String?
+  dueDate       DateTime
+  issueDate     DateTime       @default(now())
+  status        InvoiceStatus  @default(DRAFT)
+  subtotal      Float
+  tax           Float          @default(0)
+  discount      Float          @default(0)
+  total         Float
+  notes         String?
+  pdfUrl        String?
+  stripePaymentId String?
+  paidAt        DateTime?
+  viewedAt      DateTime?
+  items         InvoiceItem[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  unitPrice   Float
+  total       Float
+}
+
+model Subscription {
+  id                  String             @id @default(cuid())
+  userId              String             @unique
+  user                User               @relation(fields: [userId], references: [id])
+  stripeCustomerId    String?
+  stripeSubscriptionId String?           @unique
+  stripePriceId       String?
+  status              SubscriptionStatus @default(ACTIVE)
+  tier                Tier               @default(FREE)
+  currentPeriodStart  DateTime
+  currentPeriodEnd    DateTime
+  cancelAtPeriodEnd   Boolean            @default(false)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model Quota {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  invoicesUsed  Int      @default(0)
+  invoicesLimit Int      @default(5)
+  month         DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  email           String
+  businessName    String?
+  businessAddress String?
+  businessPhone   String?
+  businessWebsite String?
+  logo            String?
+  taxId           String?
+  currency        String   @default("USD")
+  language        String   @default("en")
+  theme           String   @default("light")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, name])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  INCOMPLETE
+}
+
+enum Tier {
+  FREE
+  PRO
+  BUSINESS
+}

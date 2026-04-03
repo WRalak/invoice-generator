@@ -119,6 +119,35 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url).searchParams
+    const invoiceId = searchParams.get('id') as string
+
+    if (!invoiceId) {
+      return NextResponse.json({ error: 'Invoice ID is required' }, { status: 400 })
+    }
+
+    // Find and delete the invoice
+    const invoiceIndex = mockInvoices.findIndex(inv => inv.id === invoiceId)
+    if (invoiceIndex === -1) {
+      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
+
+    mockInvoices.splice(invoiceIndex, 1)
+
+    return NextResponse.json({ message: 'Invoice deleted successfully' }, { status: 200 })
+  } catch (error) {
+    console.error('Error deleting invoice:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession()

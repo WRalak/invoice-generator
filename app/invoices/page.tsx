@@ -21,6 +21,7 @@ interface Invoice {
 export default function InvoicesPage() {
   const { requireAuth, isLoading: authLoading } = useAuthProtection()
   const { success, error: showError } = useNotification()
+  const { data: session } = useSession()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -29,7 +30,7 @@ export default function InvoicesPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
       </div>
     )
   }
@@ -53,12 +54,13 @@ export default function InvoicesPage() {
       }
       return response.json()
     },
+    enabled: !!session?.user
   })
 
   const getStatusColor = (status: string) => {
     const colors = {
       DRAFT: 'bg-gray-100 text-gray-800',
-      SENT: 'bg-blue-100 text-blue-800',
+      SENT: 'bg-orange-100 text-orange-800',
       PAID: 'bg-green-100 text-green-800',
       OVERDUE: 'bg-red-100 text-red-800',
     }
@@ -95,7 +97,7 @@ export default function InvoicesPage() {
           <h1 className="text-3xl font-bold">Invoices</h1>
           <Link
             href="/invoices/new"
-            className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="inline-flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium"
           >
             <Plus className="w-4 h-4" />
             Create Invoice
@@ -112,7 +114,7 @@ export default function InvoicesPage() {
                 placeholder="Search invoices..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -121,7 +123,7 @@ export default function InvoicesPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="">All Status</option>
               <option value="DRAFT">Draft</option>

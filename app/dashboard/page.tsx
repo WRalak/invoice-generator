@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useProfile } from '../contexts/ProfileContext'
@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const { currentProfile, profiles } = useProfile()
   const { requireAuth, isLoading: authLoading } = useAuthProtection()
   const { success, error, warning, info } = useNotification()
-  const [hasShownWelcome, setHasShownWelcome] = useState(false)
+  const hasShownWelcomeRef = useRef(false)
   
   // Show loading state while checking auth
   if (authLoading) {
@@ -49,11 +49,11 @@ export default function DashboardPage() {
 
   // Show welcome notification on first load
   useEffect(() => {
-    if (currentProfile && session && !hasShownWelcome) {
+    if (currentProfile && session && !hasShownWelcomeRef.current) {
       success('Welcome back!', `You're now viewing ${currentProfile.name}'s dashboard`)
-      setHasShownWelcome(true)
+      hasShownWelcomeRef.current = true
     }
-  }, [currentProfile, session, hasShownWelcome])
+  }, [currentProfile, session])
   
   const { data: dashboardData, isLoading, error: queryError } = useQuery({
     queryKey: ['dashboard'],

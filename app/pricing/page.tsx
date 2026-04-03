@@ -120,78 +120,113 @@ export default function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Simple, Transparent Pricing</h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Choose the perfect plan for your business. Start for free and upgrade
-            when you need more.
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+            Choose Your Perfect Plan
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Start free and scale as you grow. All plans include our core features with no hidden fees.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 mb-16">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`bg-white rounded-2xl shadow-lg overflow-hidden border ${
-                plan.popular ? 'ring-2 ring-blue-500' : ''
+              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden border-2 transition-all duration-300 hover:shadow-2xl hover:scale-105 ${
+                plan.popular 
+                  ? 'border-blue-500 ring-4 ring-blue-100' 
+                  : 'border-gray-200'
               }`}
             >
               {plan.popular && (
-                <div className="bg-blue-500 text-white text-center py-2 text-sm font-medium">
-                  Most Popular
+                <div className="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 rounded-bl-lg text-sm font-semibold">
+                  MOST POPULAR
                 </div>
               )}
-              <div className="p-6">
-                <h2 className="text-2xl font-bold mb-2">{plan.name}</h2>
-                <div className="mb-4">
-                  <span className="text-4xl font-bold">
-                    {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
-                  </span>
-                  {typeof plan.price === 'number' && (
-                    <span className="text-gray-600">/{plan.period}</span>
-                  )}
+              
+              <div className="p-8">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{plan.name}</h2>
+                  <div className="mb-4">
+                    <span className="text-5xl font-bold text-gray-900">
+                      {typeof plan.price === 'number' ? `$${plan.price}` : plan.price}
+                    </span>
+                    {typeof plan.price === 'number' && (
+                      <span className="text-xl text-gray-600">/{plan.period}</span>
+                    )}
+                  </div>
+                  <p className="text-lg text-gray-600 font-medium">
+                    {typeof plan.invoices === 'number'
+                      ? `Up to ${plan.invoices} invoices per month`
+                      : `${plan.invoices} invoices`}
+                  </p>
                 </div>
-                <p className="text-gray-600 mb-6">
-                  {typeof plan.invoices === 'number'
-                    ? `Up to ${plan.invoices} invoices`
-                    : `${plan.invoices} invoices`}
-                </p>
 
                 <button
                   onClick={() => handleSubscribe(plan.name)}
                   disabled={isLoading === plan.name}
-                  className={`w-full py-2 rounded-lg font-semibold transition-colors mb-6 ${
+                  className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 mb-8 ${
                     plan.popular
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  } disabled:opacity-50`}
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200 border-2 border-gray-300'
+                  } disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                 >
-                  {isLoading === plan.name ? 'Processing...' : plan.cta}
+                  {isLoading === plan.name ? (
+                    <>
+                      <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    plan.cta
+                  )}
                 </button>
 
-                <ul className="space-y-3">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900 mb-4">What's included:</h3>
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-600">{feature}</span>
-                    </li>
+                    <div key={feature} className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-0.5">
+                        <Check className="w-4 h-4 text-green-600" />
+                      </div>
+                      <span className="text-gray-700 leading-relaxed">{feature}</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-gray-500">
-            Need per-invoice pricing?{' '}
-            <a href="/contact" className="text-blue-600 hover:underline">
-              Contact us
-            </a>{' '}
-            for custom plans starting at $2/invoice.
+        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+            Need a custom solution?
+          </h3>
+          <p className="text-gray-600 mb-6 text-lg">
+            We offer custom pricing for businesses with unique needs. Contact our sales team for a personalized quote.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a
+              href="mailto:sales@invoicemaster.com"
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            >
+              Contact Sales
+            </a>
+            <span className="text-gray-500">
+              Custom plans starting at $2/invoice
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-12 text-center">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-2xl mx-auto">
+            <h4 className="font-semibold text-blue-900 mb-2">30-Day Money Back Guarantee</h4>
+            <p className="text-blue-700">
+              Not satisfied? Get a full refund within 30 days, no questions asked.
+            </p>
+          </div>
         </div>
       </div>
     </div>

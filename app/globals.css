@@ -3,17 +3,69 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-primary: 251 146 60;
+    --bg-secondary: 249 250 251;
+    --text-primary: 220 38 38;
+    --text-secondary: 108 117 125;
+    --border-primary: 234 179 8;
+    --border-secondary: 229 231 235;
+  }
+
+  .dark {
+    --bg-primary: 31 41 55;
+    --bg-secondary: 17 24 39;
+    --text-primary: 245 245 244;
+    --text-secondary: 113 113 122;
+    --border-primary: 83 82 91;
+    --border-secondary: 71 85 105;
+  }
+
   body {
     @apply antialiased;
+    background-color: rgb(var(--bg-secondary));
+    color: rgb(var(--text-primary));
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    background-color: rgb(17 24 39);
+    color: rgb(245 245 244);
+  }
+
+  .dark .bg-white {
+    background-color: rgb(31 41 55) !important;
+    color: rgb(245 245 244) !important;
+  }
+
+  .dark .bg-gray-50 {
+    background-color: rgb(55 65 81) !important;
+  }
+
+  .dark .text-gray-900 {
+    color: rgb(209 213 219) !important;
+  }
+
+  .dark .text-gray-600 {
+    color: rgb(156 163 175) !important;
+  }
+
+  .dark .border-gray-200 {
+    border-color: rgb(75 85 99) !important;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+    background-color: rgb(var(--bg-primary));
+    color: white;
+    @apply px-4 py-2 rounded-lg font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors;
   }
   
   .btn-secondary {
-    @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+    background-color: rgb(var(--bg-secondary));
+    color: rgb(var(--text-primary));
+    border-color: rgb(var(--border-secondary));
+    @apply border px-4 py-2 rounded-lg font-medium hover:bg-opacity-80 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors;
   }
 }

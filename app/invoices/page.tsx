@@ -19,18 +19,27 @@ interface Invoice {
 }
 
 export default function InvoicesPage() {
-  const { requireAuth } = useAuthProtection()
-  const { success, error } = useNotification()
+  const { requireAuth, isLoading: authLoading } = useAuthProtection()
+  const { success, error: showError } = useNotification()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Protect the route
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  // Protect the route - this will redirect if not authenticated
   if (!requireAuth()) {
     return null
   }
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error: queryError } = useQuery({
     queryKey: ['invoices', currentPage, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -70,7 +79,7 @@ export default function InvoicesPage() {
 
       success('Invoice Deleted', 'The invoice has been deleted successfully')
     } catch (err) {
-      error('Delete Failed', 'Failed to delete invoice. Please try again.')
+      showError('Delete Failed', 'Failed to delete invoice. Please try again.')
     }
   }
 
@@ -127,9 +136,9 @@ export default function InvoicesPage() {
       {/* Invoices Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="overflow-x-auto">
-          {error ? (
+          {queryError ? (
             <div className="text-center py-12">
-              <div className="text-red-600 mb-4">Error loading invoices: {error.message}</div>
+              <div className="text-red-600 mb-4">Error loading invoices: {queryError.message}</div>
               <button 
                 onClick={() => window.location.reload()} 
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"

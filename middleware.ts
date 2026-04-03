@@ -1,34 +1,28 @@
 import { NextResponse } from 'next/server'
 import { withAuth } from 'next-auth/middleware'
 
-export default withAuth(
-  function middleware(req) {
-    const { pathname } = req.nextUrl
-
-    // Redirect authenticated users away from auth pages
-    if (pathname.startsWith('/auth/signin')) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
-
-    return NextResponse.next()
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => {
-        // Allow access to public routes without authentication
-        const publicRoutes = ['/', '/pricing', '/auth/signin']
-        const { pathname } = new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000')
-        
-        if (publicRoutes.some(route => pathname.startsWith(route))) {
-          return true
-        }
-        
-        // Require authentication for all other routes
-        return !!token
-      },
+export default withAuth({
+  callbacks: {
+    authorized: ({ token, req }) => {
+      const { pathname } = req.nextUrl
+      
+      // Allow access to public routes without authentication
+      const publicRoutes = ['/', '/pricing', '/auth/signin', '/auth/signup', '/auth/forgot-password', '/auth/reset-password', '/api/debug']
+      
+      if (publicRoutes.some(route => pathname.startsWith(route))) {
+        return true
+      }
+      
+      // Allow access to admin routes only for admin users
+      if (pathname.startsWith('/admin/') || pathname.startsWith('/api/admin/')) {
+        return token?.email === 'admin@invoicemaster.com'
+      }
+      
+      // Require authentication for all other routes
+      return !!token
     },
-  }
-)
+  },
+})
 
 export const config = {
   matcher: [

@@ -3,8 +3,8 @@
 import { useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Download, Mail, Printer } from 'lucide-react'
-import { useAuthProtection } from '../../../contexts/AuthProtectionContext'
-import { formatCurrency, formatDate, getStatusColor } from '../../../lib/utils'
+import { useAuthProtection } from '../../contexts/AuthProtectionContext'
+import { formatCurrency, formatDate, getStatusColor } from '../../lib/utils'
 
 interface InvoiceItem {
   id: string
@@ -53,7 +53,7 @@ export default function InvoiceDetailPage() {
   const { data: invoice, isLoading } = useQuery<Invoice>({
     queryKey: ['invoice', id],
     queryFn: async () => {
-      const response = await fetch(`/api/invoice/${id}`)
+      const response = await fetch(`/api/invoices/${id}`)
       if (!response.ok) throw new Error('Failed to fetch invoice')
       return response.json()
     },

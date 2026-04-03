@@ -42,7 +42,11 @@ export function AuthProtectionProvider({
     const authenticated = !!session?.user
     setIsAuthenticated(authenticated)
 
-    if (authenticated) {
+    if (!authenticated) {
+      // Redirect to login if not authenticated
+      router.push('/auth/signin')
+      setIsAuthorized(false)
+    } else {
       // Check role-based authorization
       const role = session?.user?.role || 'user'
       setUserRole(role)
@@ -54,8 +58,6 @@ export function AuthProtectionProvider({
       if (!authorized) {
         router.push('/unauthorized')
       }
-    } else {
-      setIsAuthorized(false)
     }
 
     setIsLoading(false)

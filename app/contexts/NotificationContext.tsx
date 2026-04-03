@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { Notification, NotificationContextType, NotificationType } from '../../types/notification'
+import { Notification, NotificationContextType, NotificationType } from '@/types/notification'
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 

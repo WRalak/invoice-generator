@@ -14,53 +14,62 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        // Find user in memory store
-        let user = users.find(u => u.email === credentials.email)
-
-        // Create user if not exists
-        if (!user) {
-          const hashedPassword = await bcryptjs.hash(credentials.password, 12)
-          user = {
-            id: Date.now().toString(),
-            email: credentials.email,
-            name: credentials.email.split('@')[0],
-            password: hashedPassword,
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            return null
           }
-          users.push(user)
-        }
 
-        // Verify password
-        const isPasswordValid = await bcryptjs.compare(
-          credentials.password,
-          user.password
-        )
+          // Find user in memory store
+          let user = users.find(u => u.email === credentials.email)
 
-        if (!isPasswordValid) {
+          // Create user if not exists (auto-registration)
+          if (!user) {
+            const hashedPassword = await bcryptjs.hash(credentials.password, 12)
+            user = {
+              id: Date.now().toString(),
+              email: credentials.email,
+              name: credentials.email.split('@')[0],
+              password: hashedPassword,
+            }
+            users.push(user)
+          }
+
+          // Verify password
+          const isPasswordValid = await bcryptjs.compare(
+            credentials.password,
+            user.password
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
           return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
         }
       }
     })
   ],
   callbacks: {
-    session: async ({ session, token }) => {
-      if (session?.user) {
+    async session({ session, token }) {
+      if (session?.user && token) {
         session.user.id = token.sub!
+        session.user.email = token.email as string
+        session.user.name = token.name as string
       }
       return session
     },
-    jwt: async ({ user, token }) => {
+    async jwt({ user, token }) {
       if (user) {
-        token.uid = user.id
+        token.sub = user.id.toString()
+        token.email = user.email
+        token.name = user.name
       }
       return token
     },
@@ -71,4 +80,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/signin',
   },
+  secret: process.env.NEXTAUTH_SECRET,
 }

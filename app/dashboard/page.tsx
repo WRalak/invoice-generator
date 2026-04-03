@@ -29,20 +29,31 @@ interface Invoice {
 export default function DashboardPage() {
   const { data: session } = useSession()
   const { currentProfile, profiles } = useProfile()
-  const { requireAuth } = useAuthProtection()
+  const { requireAuth, isLoading: authLoading } = useAuthProtection()
   const { success, error, warning, info } = useNotification()
+  const [hasShownWelcome, setHasShownWelcome] = useState(false)
   
-  // Protect the route
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+      </div>
+    )
+  }
+  
+  // Protect the route - this will redirect if not authenticated
   if (!requireAuth()) {
     return null
   }
 
   // Show welcome notification on first load
   useEffect(() => {
-    if (currentProfile && session) {
+    if (currentProfile && session && !hasShownWelcome) {
       success('Welcome back!', `You're now viewing ${currentProfile.name}'s dashboard`)
+      setHasShownWelcome(true)
     }
-  }, [currentProfile, session, success])
+  }, [currentProfile, session, hasShownWelcome])
   
   const { data: dashboardData, isLoading, error: queryError } = useQuery({
     queryKey: ['dashboard'],
@@ -63,11 +74,23 @@ export default function DashboardPage() {
     enabled: !!session?.user,
   })
 
+  const { data: subscriptionData } = useQuery({
+    queryKey: ['subscription'],
+    queryFn: async () => {
+      const response = await fetch('/api/subscription')
+      if (!response.ok) {
+        throw new Error('Failed to fetch subscription')
+      }
+      return response.json()
+    },
+    enabled: !!session?.user,
+  })
+
   const stats = {
     totalInvoices: dashboardData?.invoiceCount || 0,
     paidAmount: dashboardData?.totalRevenue || 0,
     overdueCount: 0, // TODO: Calculate from invoices
-    remainingQuota: 10, // TODO: Get from user quota
+    remainingQuota: subscriptionData?.plan === 'FREE' ? 5 : subscriptionData?.plan === 'PRO' ? 100 : 999,
   }
 
   const recentInvoices = dashboardData?.recentInvoices || []
@@ -75,7 +98,7 @@ export default function DashboardPage() {
   const getStatusColor = (status: string) => {
     const colors = {
       DRAFT: 'bg-gray-100 text-gray-800',
-      SENT: 'bg-blue-100 text-blue-800',
+      SENT: 'bg-orange-100 text-orange-800',
       PAID: 'bg-green-100 text-green-800',
       OVERDUE: 'bg-red-100 text-red-800',
     }
@@ -89,11 +112,11 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
                 {currentProfile.businessName ? (
-                  <Building2 className="w-8 h-8 text-blue-600" />
+                  <Building2 className="w-8 h-8 text-orange-600" />
                 ) : (
-                  <User className="w-8 h-8 text-blue-600" />
+                  <User className="w-8 h-8 text-orange-600" />
                 )}
               </div>
               <div>
@@ -116,6 +139,64 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Subscription Status */}
+      {subscriptionData && (
+        <div className={`rounded-xl p-6 mb-8 border-2 ${
+          subscriptionData.plan === 'FREE' 
+            ? 'bg-gray-50 border-gray-200' 
+            : subscriptionData.plan === 'PRO'
+            ? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200'
+            : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                  subscriptionData.plan === 'FREE'
+                    ? 'bg-gray-200 text-gray-700'
+                    : subscriptionData.plan === 'PRO'
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-purple-600 text-white'
+                }`}>
+                  {subscriptionData.plan} PLAN
+                </div>
+                {subscriptionData.status === 'ACTIVE' && (
+                  <div className="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                    ACTIVE
+                  </div>
+                )}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {subscriptionData.plan === 'FREE' ? 'Free Plan' : subscriptionData.plan === 'PRO' ? 'Pro Plan' : 'Business Plan'}
+              </h3>
+              <p className="text-gray-600">
+                {subscriptionData.plan === 'FREE' 
+                  ? '5 invoices per month' 
+                  : subscriptionData.plan === 'PRO'
+                  ? '100 invoices per month'
+                  : 'Unlimited invoices'
+                }
+              </p>
+            </div>
+            <div className="text-right">
+              {subscriptionData.plan === 'FREE' && (
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium"
+                >
+                  Upgrade Plan
+                </Link>
+              )}
+              {subscriptionData.currentPeriodEnd && (
+                <p className="text-sm text-gray-500">
+                  Renews {new Date(subscriptionData.currentPeriodEnd).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-gray-600">
@@ -128,8 +209,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-orange-50 rounded-lg">
+              <FileText className="w-6 h-6 text-orange-600" />
             </div>
             <span className="text-2xl font-bold text-gray-900">{stats.totalInvoices}</span>
           </div>
@@ -174,7 +255,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900">Recent Invoices</h2>
             <Link
               href="/invoices/new"
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="inline-flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium"
             >
               <Plus className="w-4 h-4" />
               Create Invoice
@@ -188,7 +269,7 @@ export default function DashboardPage() {
               <div className="text-red-600 mb-4">Error loading dashboard: {queryError.message}</div>
               <button 
                 onClick={() => window.location.reload()} 
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
               >
                 Retry
               </button>
@@ -226,7 +307,7 @@ export default function DashboardPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link
                           href={`/invoices/${invoice.id}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                          className="text-orange-600 hover:text-orange-800 hover:underline font-medium"
                         >
                           {invoice.number}
                         </Link>
